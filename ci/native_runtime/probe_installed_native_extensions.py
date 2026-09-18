@@ -263,18 +263,22 @@ def exercise(root: Path) -> dict[str, object]:
         daemon = GuardDaemonServer(store, host="127.0.0.1", port=0, home_dir=root, workspace_dir=workspace)
         daemon.start()
         case("restart-retains-controls", "ollama rm example-model", revision, matched="command.ollama.rm")
-        for extension in BUILT_IN_COMMAND_EXTENSION_REGISTRY.extensions:
-            if extension.delegated_protection != "package-firewall":
-                continue
-            permission_id = extension.permissions[0].permission_id
-            revision = commit_controls(
-                store,
-                password,
-                (
-                    enabled,
-                    control(ControlTargetKind.PERMISSION, permission_id, ControlState.DISABLED),
-                ),
+        delegated = [
+            extension
+            for extension in BUILT_IN_COMMAND_EXTENSION_REGISTRY.extensions
+            if extension.delegated_protection == "package-firewall"
+        ]
+        delegated_controls = tuple(
+            control(
+                ControlTargetKind.PERMISSION,
+                extension.permissions[0].permission_id,
+                ControlState.DISABLED,
             )
+            for extension in delegated
+        )
+        revision = commit_controls(store, password, (enabled, *delegated_controls))
+        for extension in delegated:
+            permission_id = extension.permissions[0].permission_id
             case(
                 extension.extension_id,
                 f"{extension.executables[0]} install fixture-package",
