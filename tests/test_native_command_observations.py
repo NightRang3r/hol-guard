@@ -216,4 +216,26 @@ def test_unknown_fields_duplicates_limits_and_unbound_error_reject() -> None:
     bad["evaluation_error"] = "native_command_evaluation_failed"
     _rehash(bad)
     assert validate_native_command_observations(bad) is None
-    assert not _decode_pre_tool_result({"command_extensions": bad}, harness="claude-code")
+    valid_result = {
+        "schema": "guard-pre-tool-result.v1",
+        "version": 1,
+        "authority": "rust",
+        "action": {
+            "schema": "guard-pre-tool-action.v1",
+            "version": 1,
+            "harness": "claude-code",
+            "event": "PreToolUse",
+            "action_type": "command",
+            "operation": "execute",
+            "bounded": True,
+            "sensitive_target": False,
+        },
+        "decision": "deny",
+        "policy_action": "block",
+        "minimum_action": "block",
+        "reason_code": "native_command_extension_evaluation_failed",
+        "reason": "HOL Guard rejected malformed native extension evidence.",
+        "explicitly_benign": False,
+        "command_extensions": bad,
+    }
+    assert not _decode_pre_tool_result(valid_result, harness="claude-code")
