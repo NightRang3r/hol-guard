@@ -1,6 +1,6 @@
 //! Persist independent control revisions even when the current snapshot expires
 //! or is quarantined. The optional floor extends the existing authenticated
-//! authority record without changing the legacy MAC when it is absent.
+//! authority record while retaining the base generation-floor MAC when it is absent.
 
 use guard_policy_snapshot::{canonical_json_bytes, generation_floor_mac, PolicySnapshotV3};
 use serde::{Deserialize, Serialize};
