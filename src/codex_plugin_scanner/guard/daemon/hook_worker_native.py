@@ -357,6 +357,18 @@ class HookWorkerNativeMixin:
             if native_used:
                 self.metrics.record_route("native_resident")
             return response
+        except TimeoutError:
+            return _record_unavailable_native(
+                self,
+                payload,
+                harness=harness,
+                event_name=event_name,
+                reason_code="native_review_deadline_exceeded",
+                workspace=workspace,
+                home_dir=home_dir,
+                guard_home=guard_home,
+                recording_only=recording_only,
+            )
         except (OSError, NativePolicySnapshotError):
             if fenced is False:
                 raise
