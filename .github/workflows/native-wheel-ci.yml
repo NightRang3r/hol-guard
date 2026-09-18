@@ -404,6 +404,7 @@ jobs:
           .venv\Scripts\python.exe -I ci\native_runtime\probe_installed_native_extensions.py --json installed-native-extensions.json
           .venv\Scripts\python.exe -I ci\native_runtime\probe_installed_command_control_lock.py --json installed-command-control-lock.json
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
         with:
           name: hol-guard-native-wheel-windows-x64
           path: |
