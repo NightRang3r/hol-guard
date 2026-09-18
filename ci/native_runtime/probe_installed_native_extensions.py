@@ -43,6 +43,16 @@ from codex_plugin_scanner.guard.store import GuardStore
 from codex_plugin_scanner.guard.store_base import EncryptedFileSecretStore
 
 
+_ACTION_RANK = {
+    "allow": 0,
+    "warn": 1,
+    "review": 2,
+    "require-reapproval": 3,
+    "sandbox-required": 4,
+    "block": 5,
+}
+
+
 def require(condition: bool, code: str) -> None:
     if not condition:
         raise RuntimeError(f"installed_native_extensions_failed:{code}")
@@ -147,6 +157,7 @@ def exercise(root: Path) -> dict[str, object]:
         *,
         matched: str | None,
         minimum: str | None = None,
+        minimum_at_least: str | None = None,
         tool_payload: dict[str, object] | None = None,
         permission_id: str | None = None,
     ) -> dict:
@@ -188,6 +199,15 @@ def exercise(root: Path) -> dict[str, object]:
             )
         if minimum is not None:
             require(result["minimum_action"] == minimum, f"{label}:wrong_floor:{result['minimum_action']}")
+        if minimum_at_least is not None:
+            actual = result["minimum_action"]
+            require(
+                isinstance(actual, str)
+                and actual in _ACTION_RANK
+                and minimum_at_least in _ACTION_RANK
+                and _ACTION_RANK[actual] >= _ACTION_RANK[minimum_at_least],
+                f"{label}:floor_below_{minimum_at_least}:{actual}",
+            )
         require(result["decision"] == "deny", f"{label}:unsafe_allow")
         response = request(daemon, home, workspace, "claude-code", "PreToolUse", payload)
         require(isinstance(response, dict), f"{label}:http_missing")
@@ -294,7 +314,7 @@ def exercise(root: Path) -> dict[str, object]:
             "",
             revision,
             matched=None,
-            minimum="require-reapproval",
+            minimum_at_least="review",
             permission_id=instapods_permission,
             tool_payload={"tool_name": "mcp__instapods__delete_pod", "tool_input": {"pod_id": "synthetic-pod"}},
         )
@@ -303,7 +323,7 @@ def exercise(root: Path) -> dict[str, object]:
             "",
             revision,
             matched=None,
-            minimum="require-reapproval",
+            minimum_at_least="review",
             permission_id=instapods_permission,
             tool_payload={"tool_name": "mcp__instapods-mcp__exec_command", "tool_input": {"command": "echo synthetic"}},
         )
