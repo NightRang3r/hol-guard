@@ -215,28 +215,28 @@ impl CompiledNativeCommandControls {
                 }
             }
         };
-        let delegated_block = if batch.evaluation_error.is_none() {
+        let delegated_floor = if batch.evaluation_error.is_none() {
             match self.delegated_observations(command, tool, packages, &mut batch, deadline) {
-                Ok(blocked) => blocked,
+                Ok(action) => action,
                 Err(_) => {
                     batch = NativeCommandObservationBatchV1 {
                         evaluation_error: Some("native_command_evaluation_failed".into()),
                         ..Default::default()
                     };
-                    true
+                    "block"
                 }
             }
         } else {
-            false
+            "allow"
         };
-        let mut floor = if self.global_block || delegated_block {
+        let mut floor = if self.global_block {
             "block"
         } else {
-            "allow"
+            delegated_floor
         };
         let mut reason = if self.global_block {
             "native_command_control_authority_block"
-        } else if delegated_block {
+        } else if delegated_floor == "block" {
             "native_command_permission_disabled"
         } else {
             "native_command_extension_review"
