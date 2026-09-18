@@ -339,7 +339,11 @@ def exercise(root: Path) -> dict[str, object]:
         marker = home / "native-runtime" / AUTHORITY_FILE_NAME
         marker.write_text("{}\n", encoding="utf-8")
         tampered = review_raw_hook_native(
-            payload={"command": "pwd"},
+            payload={
+                "hook_event_name": "PreToolUse",
+                "tool_name": "Bash",
+                "tool_input": {"command": "pwd"},
+            },
             harness="claude-code",
             event="PreToolUse",
             guard_home=home,
