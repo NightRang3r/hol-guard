@@ -49,6 +49,14 @@ _COMPONENTS = (
     ("guard-command-command-operand-matchers", Path("rust/crates/guard-command/src/command_operand_matchers.rs")),
     ("guard-command-command-option-parsing", Path("rust/crates/guard-command/src/command_option_parsing.rs")),
     ("guard-command-command-option-unicode", Path("rust/crates/guard-command/src/command_option_unicode.rs")),
+    (
+        "guard-command-command-option-unicode-ranges-a",
+        Path("rust/crates/guard-command/src/command_option_unicode_ranges_a.rs"),
+    ),
+    (
+        "guard-command-command-option-unicode-ranges-b",
+        Path("rust/crates/guard-command/src/command_option_unicode_ranges_b.rs"),
+    ),
     ("guard-command-command-reviewed-literal", Path("rust/crates/guard-command/src/command_reviewed_literal.rs")),
     (
         "guard-command-command-specialized-matchers",
@@ -94,6 +102,7 @@ _COMPONENTS = (
         "guard-contracts-native-command-observations",
         Path("rust/crates/guard-contracts/src/native_command_observations.rs"),
     ),
+    ("guard-contracts-native-hook-receipt", Path("rust/crates/guard-contracts/src/native_hook_receipt.rs")),
     ("guard-runtime-policy-store-command-floor", Path("rust/crates/guard-runtime/src/policy_store_command_floor.rs")),
     ("native-command-program-artifact", Path("contracts/extensions/native-command-program.v1.json")),
     ("guard-command-command-ascii-comparison", Path("rust/crates/guard-command/src/command_ascii_comparison.rs")),
