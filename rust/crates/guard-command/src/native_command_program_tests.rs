@@ -543,8 +543,12 @@ fn native_mcp_defaults_are_opt_in_tightening_only_and_redacted() {
         false,
     ))
     .unwrap();
-    for tool_name in ["mcp__instapods__delete_pod", "mcp__instapods-mcp__exec_command"] {
-        let hosted_tool = serde_json::json!({"tool_name":tool_name,"tool_input":{"fixture":"synthetic"}});
+    for tool_name in [
+        "mcp__instapods__delete_pod",
+        "mcp__instapods-mcp__exec_command",
+    ] {
+        let hosted_tool =
+            serde_json::json!({"tool_name":tool_name,"tool_input":{"fixture":"synthetic"}});
         let reviewed = evaluate_pre_tool_envelope_with_extensions(
             "claude-code",
             "PreToolUse",
