@@ -1,0 +1,40 @@
+name: Native extension reference tools
+
+on:
+  push:
+    branches: [fix/main-native-extension-runtime]
+    paths: ['.github/workflows/native-extension-reference-tools.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  reference-profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39
+        with:
+          version: '0.9.26'
+      - name: Prepare isolated reference interpreter
+        run: |
+          python -c 'import sys,unicodedata; assert sys.version_info[:2] == (3,12); assert unicodedata.unidata_version == "15.0.0"'
+          mkdir -p "$RUNNER_TEMP/python-reference/wheels"
+          uv export --frozen --no-dev --no-emit-project --format requirements-txt --output-file "$RUNNER_TEMP/python-reference/requirements.txt"
+          python -m pip download --only-binary=:all: --dest "$RUNNER_TEMP/python-reference/wheels" -r "$RUNNER_TEMP/python-reference/requirements.txt"
+          python -m pip download --only-binary=:all: --dest "$RUNNER_TEMP/python-reference/wheels" pytest build ruff hatchling
+          tar -C "$pythonLocation" -czf "$RUNNER_TEMP/python-reference/python312.tar.gz" .
+          cd "$RUNNER_TEMP/python-reference"
+          sha256sum python312.tar.gz wheels/* > digests.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: native-extension-reference-python
+          path: ${{ runner.temp }}/python-reference/
+          if-no-files-found: error
+          retention-days: 3
