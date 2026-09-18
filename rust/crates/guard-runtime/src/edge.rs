@@ -320,9 +320,12 @@ fn evaluate_validated_envelope(
                 &event_name,
                 &envelope.raw_payload,
                 policy_snapshot.and_then(|snapshot| snapshot.command_extensions.as_ref()),
-                envelope
-                    .deadline_budget_ms
-                    .map(|budget| Instant::now() + Duration::from_millis(budget.min(9_000))),
+                Some(
+                    Instant::now()
+                        + Duration::from_millis(
+                            envelope.deadline_budget_ms.unwrap_or(9_000).min(9_000),
+                        ),
+                ),
             );
             let evaluated = if let Some(snapshot) = policy_snapshot {
                 crate::policy_enforcement::apply_pre_tool_policy(
