@@ -184,7 +184,11 @@ def _semantic_sources_digest() -> str:
             content = source.read(512 * 1024 + 1)
         if len(content) > 512 * 1024:
             raise NativeCommandProgramError("native_command_source_bytes_exceeded")
-        records.append((path.name, hashlib.sha256(content).hexdigest()))
+        # Git may materialize text sources with CRLF on Windows. Python source
+        # semantics are newline-insensitive here, so bind the canonical LF bytes
+        # rather than a platform checkout representation.
+        canonical_source = content.replace(b"\r\n", b"\n")
+        records.append((path.name, hashlib.sha256(canonical_source).hexdigest()))
     return _digest(b"hol-guard.native-command-authoring-semantics.v1\0", records)
 
 
