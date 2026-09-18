@@ -30,7 +30,8 @@ pub(crate) fn python_is_whitespace(character: char) -> bool {
 
 fn python_alphanumeric_kind(character: char) -> Option<u8> {
     let codepoint = u32::from(character);
-    range_kind(PYTHON_ALNUM_RANGES_A, codepoint).or_else(|| range_kind(PYTHON_ALNUM_RANGES_B, codepoint))
+    range_kind(PYTHON_ALNUM_RANGES_A, codepoint)
+        .or_else(|| range_kind(PYTHON_ALNUM_RANGES_B, codepoint))
 }
 
 fn range_kind(ranges: &[(u32, u32, u8)], codepoint: u32) -> Option<u8> {
@@ -48,15 +49,21 @@ fn range_kind(ranges: &[(u32, u32, u8)], codepoint: u32) -> Option<u8> {
         .map(|index| ranges[index].2)
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
     fn unicode_reference_categories_are_disjoint_sorted_and_python_compatible() {
-        for entries in PYTHON_ALNUM_RANGES.windows(2) {
-            assert!(entries[0].0 <= entries[0].1);
-            assert!(entries[0].1 < entries[1].0);
+        let mut previous_end = None;
+        for &(start, end, _) in PYTHON_ALNUM_RANGES_A
+            .iter()
+            .chain(PYTHON_ALNUM_RANGES_B.iter())
+        {
+            assert!(start <= end);
+            if let Some(previous) = previous_end {
+                assert!(previous < start);
+            }
+            previous_end = Some(end);
         }
         assert!(python_is_alphabetic('é'));
         assert!(python_is_alphanumeric('²'));

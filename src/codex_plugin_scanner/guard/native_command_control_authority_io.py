@@ -185,10 +185,10 @@ def hold_command_control_authority_lock(
     with ExitStack() as resources:
         directory: int | None = None
         if os.name == "nt":
-            from . import native_policy_snapshot as api
+            from .native_policy_snapshot import _windows_open_private_fd, _windows_private_directory_binding
 
-            binding = resources.enter_context(api._windows_private_directory_binding(guard_home))
-            descriptor = api._windows_open_private_fd(binding.path / AUTHORITY_LOCK_NAME, maximum_bytes=1)
+            binding = resources.enter_context(_windows_private_directory_binding(guard_home))
+            descriptor = _windows_open_private_fd(binding.path / AUTHORITY_LOCK_NAME, maximum_bytes=1)
         else:
             directory = resources.enter_context(_unix_directory(guard_home, private=False))
             descriptor = os.open(
