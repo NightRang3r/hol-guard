@@ -50,7 +50,10 @@ impl NativeCommandProgram {
         observe_phase("json_value_parse");
         let canonical =
             serde_json::to_vec(&value).map_err(|_| "native_command_program_json_invalid")?;
-        if bytes != canonical && bytes.strip_suffix(b"\n") != Some(canonical.as_slice()) {
+        if bytes != canonical
+            && bytes.strip_suffix(b"\n") != Some(canonical.as_slice())
+            && bytes.strip_suffix(b"\r\n") != Some(canonical.as_slice())
+        {
             return Err("native_command_program_noncanonical");
         }
         let object = value
