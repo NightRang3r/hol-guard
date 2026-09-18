@@ -132,10 +132,6 @@ const COMPONENTS: &[(&str, &[u8])] = &[
         include_bytes!("../../guard-command/src/command_structured_matchers/grammar.rs"),
     ),
     (
-        "guard-command-command-structured-matchers-tests",
-        include_bytes!("../../guard-command/src/command_structured_matchers/tests.rs"),
-    ),
-    (
         "guard-command-command-structured-matchers",
         include_bytes!("../../guard-command/src/command_structured_matchers.rs"),
     ),
@@ -379,7 +375,6 @@ mod tests {
                 "guard-command-command-reviewed-literal",
                 "guard-command-command-specialized-matchers",
                 "guard-command-command-structured-matchers-grammar",
-                "guard-command-command-structured-matchers-tests",
                 "guard-command-command-structured-matchers",
                 "guard-command-executable-flag-contract",
                 "guard-command-lib",
