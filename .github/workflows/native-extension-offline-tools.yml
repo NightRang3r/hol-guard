@@ -1,0 +1,63 @@
+name: Native extension offline verification tools
+
+on:
+  push:
+    branches: [fix/main-native-extension-runtime]
+    paths: ['.github/workflows/native-extension-offline-tools.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  python-dependencies:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: '3.13'
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39
+        with:
+          version: '0.9.26'
+      - name: Download locked binary dependency wheels
+        run: |
+          mkdir -p "$RUNNER_TEMP/offline-python/wheels"
+          uv export --frozen --no-dev --no-emit-project --format requirements-txt --output-file "$RUNNER_TEMP/offline-python/requirements.txt"
+          python -m pip download --only-binary=:all: --dest "$RUNNER_TEMP/offline-python/wheels" -r "$RUNNER_TEMP/offline-python/requirements.txt"
+          python -m pip download --only-binary=:all: --dest "$RUNNER_TEMP/offline-python/wheels" pytest build ruff hatchling
+          cd "$RUNNER_TEMP/offline-python"
+          sha256sum wheels/* > wheel-digests.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: native-extension-offline-python
+          path: ${{ runner.temp }}/offline-python/
+          if-no-files-found: error
+          retention-days: 3
+
+  rust-toolchain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          ref: 590ce01334a7724f3f1349b2ab252110a5a268f5
+          persist-credentials: false
+      - name: Prepare pinned Rust compiler and vendored dependencies
+        run: |
+          rustup toolchain install 1.88.0 --profile minimal --component rustfmt --component clippy
+          mkdir -p "$RUNNER_TEMP/offline-rust"
+          cargo +1.88.0 vendor --locked --manifest-path rust/Cargo.toml "$RUNNER_TEMP/cargo-vendor" > "$RUNNER_TEMP/offline-rust/vendor-config.toml"
+          tar -C "$(rustc +1.88.0 --print sysroot)" -czf "$RUNNER_TEMP/offline-rust/toolchain.tar.gz" .
+          tar -C "$RUNNER_TEMP" -czf "$RUNNER_TEMP/offline-rust/cargo-vendor.tar.gz" cargo-vendor
+          rustc +1.88.0 --version > "$RUNNER_TEMP/offline-rust/toolchain-version.txt"
+          cd "$RUNNER_TEMP/offline-rust"
+          sha256sum toolchain.tar.gz cargo-vendor.tar.gz > archive-digests.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: native-extension-offline-rust
+          path: ${{ runner.temp }}/offline-rust/
+          if-no-files-found: error
+          retention-days: 3
