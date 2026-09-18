@@ -148,12 +148,7 @@ pub(super) fn authority_floor_mac(
             verifier_key,
         ));
     };
-    if controls.effective_digest.len() != 64
-        || !controls
-            .effective_digest
-            .bytes()
-            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
-    {
+    if !super::policy_store_persistence::is_lower_hex(&controls.effective_digest, 64) {
         return Err("native_command_control_floor_invalid".to_owned());
     }
     if let Some(authority) = &controls.authority {
@@ -162,12 +157,7 @@ pub(super) fn authority_floor_mac(
     if controls
         .previous_floor_digest
         .as_ref()
-        .is_some_and(|digest| {
-            digest.len() != 64
-                || !digest
-                    .bytes()
-                    .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
-        })
+        .is_some_and(|digest| !super::policy_store_persistence::is_lower_hex(digest, 64))
     {
         return Err("native_command_control_floor_invalid".to_owned());
     }
