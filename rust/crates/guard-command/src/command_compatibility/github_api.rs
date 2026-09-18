@@ -141,7 +141,8 @@ fn mutation_capabilities(
     method: &str,
     fields: &[(&str, &str)],
 ) -> Vec<&'static str> {
-    let lowered = endpoint.trim_matches('/').to_ascii_lowercase();
+    let endpoint_path = endpoint.split_once('?').map_or(endpoint, |(path, _)| path);
+    let lowered = endpoint_path.trim_matches('/').to_ascii_lowercase();
     let segments: Vec<&str> = lowered
         .split('/')
         .filter(|segment| !segment.is_empty())
