@@ -93,8 +93,6 @@ pub(super) fn load_legacy_authority(
         .as_ref()
         .map(|candidate| candidate.policy_digest.clone())
         .or_else(|| floor.map(|item| item.policy_digest));
-    let command_control_floor =
-        super::policy_store_command_floor::snapshot_floor(snapshot.as_ref());
     Ok(LoadedAuthority {
         snapshot,
         canonical_bytes,
@@ -102,7 +100,8 @@ pub(super) fn load_legacy_authority(
         policy_digest,
         invalid_on_startup,
         migrate: true,
-        command_control_floor,
+        // Command-control authority starts only from a current bound snapshot.
+        command_control_floor: None,
     })
 }
 
