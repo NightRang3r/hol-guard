@@ -211,8 +211,11 @@ impl NativeCommandControlBindingV1 {
             });
         }
         let value = serde_json::json!({
-            "catalog_digest": self.catalog_digest, "health": self.health,
-            "layers": layers, "revision": self.revision, "managed_revision": self.managed_revision,
+            "catalog_digest": self.catalog_digest,
+            "health": self.health,
+            "layers": layers,
+            "managed_revision": self.managed_revision,
+            "revision": self.revision,
             "schema_version": RUNTIME_SCHEMA,
         });
         let canonical =
