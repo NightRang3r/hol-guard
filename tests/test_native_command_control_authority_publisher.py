@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import threading
 import sys
 from pathlib import Path
 
@@ -319,7 +320,12 @@ with hold_command_control_authority_lock(pathlib.Path(sys.argv[1]), shared=True)
         process = subprocess.Popen(
             [sys.executable, "-c", script, str(tmp_path)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True
         )
-        assert process.stdout is not None and process.stdout.readline() == "leased\n"
+        assert process.stdout is not None
+        ready: list[str] = []
+        reader = threading.Thread(target=lambda: ready.append(process.stdout.readline()), daemon=True)
+        reader.start()
+        reader.join(10.0)
+        assert ready == ["leased\n"], "child never acquired the shared authority lease"
 
         def forbid_write(*args, **kwargs):
             pytest.fail("unchanged verified controls attempted an authority write")
