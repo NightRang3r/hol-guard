@@ -66,10 +66,6 @@ _COMPONENTS = (
         "guard-command-command-structured-matchers-grammar",
         Path("rust/crates/guard-command/src/command_structured_matchers/grammar.rs"),
     ),
-    (
-        "guard-command-command-structured-matchers-tests",
-        Path("rust/crates/guard-command/src/command_structured_matchers/tests.rs"),
-    ),
     ("guard-command-command-structured-matchers", Path("rust/crates/guard-command/src/command_structured_matchers.rs")),
     ("guard-command-executable-flag-contract", Path("rust/crates/guard-command/src/executable_flag_contract.rs")),
     ("guard-command-lib", Path("rust/crates/guard-command/src/lib.rs")),
