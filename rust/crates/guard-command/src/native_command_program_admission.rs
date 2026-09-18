@@ -2,6 +2,28 @@
 
 use super::*;
 
+fn valid_mcp_server_name(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 128
+        && value.bytes().all(|byte| {
+            byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'_' | b'-' | b'.')
+        })
+}
+
+fn valid_remote_mcp_url(value: &str) -> bool {
+    if value.len() > 260 || !value.starts_with("https://") || value.contains('@') || value.contains('#') {
+        return false;
+    }
+    let authority = value["https://".len()..]
+        .split(['/', '?'])
+        .next()
+        .unwrap_or("");
+    !authority.is_empty()
+        && !authority.eq_ignore_ascii_case("localhost")
+        && !authority.starts_with("127.")
+        && authority != "::1"
+}
+
 impl NativeCommandProgram {
     // Production callers cannot submit arbitrary program bytes: the executable
     // and its packaged artifact are one attested release identity.
@@ -92,10 +114,35 @@ impl NativeCommandProgram {
                     .as_deref()
                     .is_some_and(|kind| kind != "package-firewall")
                 || extension.mcp.as_ref().is_some_and(|mcp| {
+                    let launch_invalid = match mcp.mcp_launch.kind.as_str() {
+                        "package-launcher" => {
+                            let Some(command) = mcp.mcp_launch.command.as_deref() else {
+                                return true;
+                            };
+                            let Some(package) = mcp.mcp_launch.package.as_deref() else {
+                                return true;
+                            };
+                            !bounded_id(command)
+                                || !bounded_id(package)
+                                || !extension.executables.iter().any(|value| value == command)
+                                || mcp.mcp_launch.url.is_some()
+                                || !mcp.mcp_launch.server_names.is_empty()
+                        }
+                        "remote-http" => {
+                            let Some(url) = mcp.mcp_launch.url.as_deref() else {
+                                return true;
+                            };
+                            mcp.mcp_launch.command.is_some()
+                                || mcp.mcp_launch.package.is_some()
+                                || !valid_remote_mcp_url(url)
+                                || mcp.mcp_launch.server_names.is_empty()
+                                || mcp.mcp_launch.server_names.len() > 8
+                                || mcp.mcp_launch.server_names.iter().any(|name| !valid_mcp_server_name(name))
+                        }
+                        _ => true,
+                    };
                     mcp.surface != "mcp"
-                        || mcp.mcp_launch.kind != "package-launcher"
-                        || !bounded_id(&mcp.mcp_launch.package)
-                        || !extension.executables.contains(&mcp.mcp_launch.command)
+                        || launch_invalid
                         || mcp.mcp_tools.len() > 512
                         || mcp.mcp_tools.iter().any(|tool| {
                             tool.name.is_empty()
@@ -106,7 +153,7 @@ impl NativeCommandProgram {
                                         || c == b'_'
                                         || c == b'-'
                                 })
-                                || !matches!(tool.state.as_str(), "allow" | "inherit" | "block")
+                                || !matches!(tool.state.as_str(), "allow" | "inherit" | "review" | "block")
                         })
                 })
                 || extension
@@ -213,9 +260,15 @@ impl NativeCommandProgram {
                 })
                 .transpose()?;
             for executable in rule.candidate_executables {
+                if executable != lowercase_for_ascii_comparison(basename(&executable)) {
+                    return Err("native_command_rule_candidate_invalid");
+                }
                 executable_index.entry(executable).or_default().push(index);
             }
             for keyword in rule.candidate_keywords {
+                if keyword != lowercase_for_ascii_comparison(&keyword) {
+                    return Err("native_command_rule_candidate_invalid");
+                }
                 keyword_index.entry(keyword).or_default().push(index);
             }
             if rule.candidate_unindexed {
