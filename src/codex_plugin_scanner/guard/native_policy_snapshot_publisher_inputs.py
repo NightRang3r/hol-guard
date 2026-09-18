@@ -26,7 +26,7 @@ class NativePolicySnapshotPublisherInputs:
     """Mixin containing filesystem observation outside synchronous hooks."""
 
     store: GuardStore  # pyright: ignore[reportUninitializedInstanceVariable]
-    _command_control_runtime: ExtensionControlRuntime | None
+    _command_control_runtime: ExtensionControlRuntime | None = None
     guard_home: Path  # pyright: ignore[reportUninitializedInstanceVariable]
     _condition: Condition  # pyright: ignore[reportUninitializedInstanceVariable]
     _acked: bool  # pyright: ignore[reportUninitializedInstanceVariable]
@@ -198,9 +198,7 @@ class NativePolicySnapshotPublisherInputs:
 
     def _compiled_command_extensions(self) -> dict[str, object]:
         try:
-            binding, runtime = read_native_command_control_binding(
-                self.store, getattr(self, "_command_control_runtime", None)
-            )
+            binding, runtime = read_native_command_control_binding(self.store, self._command_control_runtime)
             self._command_control_runtime = runtime
             return binding
         except (OSError, NativePolicySnapshotError, TypeError, ValueError, RuntimeError):
