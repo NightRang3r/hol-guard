@@ -24,8 +24,8 @@ impl CompiledNativeCommandControls {
         packages: &[String],
         batch: &mut NativeCommandObservationBatchV1,
         deadline: Option<Instant>,
-    ) -> Result<bool, &'static str> {
-        let mut blocked = false;
+    ) -> Result<&'static str, &'static str> {
+        let mut floor = "allow";
         for extension in &self.program.extensions {
             if deadline.is_some_and(|limit| Instant::now() >= limit) {
                 return Err("native_command_deadline_exceeded");
@@ -91,10 +91,17 @@ impl CompiledNativeCommandControls {
                 let prefix = format!("mcp__{alias}__");
                 let lower = tool.to_ascii_lowercase();
                 let named = lower.strip_prefix(&prefix);
-                let package_match = packages
-                    .iter()
-                    .any(|package| package.eq_ignore_ascii_case(&mcp.mcp_launch.package));
-                if named.is_none() && !package_match {
+                let package_match = mcp.mcp_launch.package.as_deref().is_some_and(|expected| {
+                    packages
+                        .iter()
+                        .any(|package| package.eq_ignore_ascii_case(expected))
+                });
+                let remote_named = mcp.mcp_launch.kind == "remote-http"
+                    && mcp.mcp_launch.server_names.iter().any(|server| {
+                        let prefix = format!("mcp__{}__", server.to_ascii_lowercase());
+                        lower.starts_with(&prefix)
+                    });
+                if named.is_none() && !package_match && !remote_named {
                     continue;
                 }
                 let name = named.unwrap_or_else(|| lower.rsplit("__").next().unwrap_or(&lower));
@@ -107,7 +114,11 @@ impl CompiledNativeCommandControls {
                 let Some(selected) = selected else {
                     continue;
                 };
-                blocked |= selected.state == "block";
+                floor = match selected.state.as_str() {
+                    "block" => "block",
+                    "review" if floor != "block" => "review",
+                    _ => floor,
+                };
                 for permission in &extension.permissions {
                     if batch.observations.len() + batch.permission_observations.len()
                         >= guard_contracts::MAX_NATIVE_COMMAND_OBSERVATIONS
@@ -150,6 +161,6 @@ impl CompiledNativeCommandControls {
         {
             return Err("native_command_evidence_limit_exceeded");
         }
-        Ok(blocked)
+        Ok(floor)
     }
 }
