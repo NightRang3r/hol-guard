@@ -286,6 +286,35 @@ def exercise(root: Path) -> dict[str, object]:
             permission_id=mcp_permission,
             tool_payload={"tool_name": "mcp__filesystem__read_file", "tool_input": {"path": "fixture.txt"}},
         )
+        instapods_enabled = control(ControlTargetKind.EXTENSION, "command.mcp-instapods", ControlState.ENABLED)
+        revision = commit_controls(store, password, (enabled, instapods_enabled))
+        instapods_permission = "command.mcp-instapods.permission.mcp-instapods-tool"
+        case(
+            "mcp-instapods-delete-review",
+            "",
+            revision,
+            matched=None,
+            minimum="review",
+            permission_id=instapods_permission,
+            tool_payload={"tool_name": "mcp__instapods__delete_pod", "tool_input": {"pod_id": "synthetic-pod"}},
+        )
+        case(
+            "mcp-instapods-alias-exec-review",
+            "",
+            revision,
+            matched=None,
+            minimum="review",
+            permission_id=instapods_permission,
+            tool_payload={"tool_name": "mcp__instapods-mcp__exec_command", "tool_input": {"command": "echo synthetic"}},
+        )
+        case(
+            "mcp-instapods-inherit",
+            "",
+            revision,
+            matched=None,
+            permission_id=instapods_permission,
+            tool_payload={"tool_name": "mcp__instapods__manage_pod", "tool_input": {"operation": "status"}},
+        )
         revision = commit_controls(store, password, (enabled,))
         case(
             "mcp-off",
