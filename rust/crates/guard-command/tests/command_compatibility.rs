@@ -176,9 +176,19 @@ fn github_api_query_suffix_preserves_merge_authorization() {
     .unwrap();
     assert_eq!(observed.rule_matches.len(), 1);
     assert_eq!(observed.rule_matches[0].rule_id, "command.github.merge");
-    assert_eq!(observed.permission_matches.len(), 1);
+    assert!(observed.permission_matches.is_empty());
+    let program: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../contracts/extensions/native-command-program.v1.json"
+    ))
+    .unwrap();
+    let merge = program["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|rule| rule["rule_id"] == "command.github.merge")
+        .unwrap();
     assert_eq!(
-        observed.permission_matches[0].permission_id,
+        merge["permission_id"],
         "command.github.permission.merge-remote"
     );
 }
