@@ -537,4 +537,26 @@ fn native_mcp_defaults_are_opt_in_tightening_only_and_redacted() {
         .unwrap()
         .permission_observations
         .is_empty());
+
+    let hosted = CompiledNativeCommandControls::new(&binding(
+        &[("extension", "command.mcp-instapods", "enabled")],
+        false,
+    ))
+    .unwrap();
+    for tool_name in ["mcp__instapods__delete_pod", "mcp__instapods-mcp__exec_command"] {
+        let hosted_tool = serde_json::json!({"tool_name":tool_name,"tool_input":{"fixture":"synthetic"}});
+        let reviewed = evaluate_pre_tool_envelope_with_extensions(
+            "claude-code",
+            "PreToolUse",
+            &hosted_tool,
+            Some(&hosted),
+            None,
+        );
+        assert_eq!(reviewed.minimum_action, "review", "{tool_name}");
+        let observations = reviewed.command_extensions.unwrap();
+        assert!(observations.permission_observations.iter().any(|item| {
+            item.extension_id == "command.mcp-instapods"
+                && item.permission_id == "command.mcp-instapods.permission.mcp-instapods-tool"
+        }));
+    }
 }
