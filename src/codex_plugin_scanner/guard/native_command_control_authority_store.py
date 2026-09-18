@@ -40,7 +40,6 @@ from .native_policy_snapshot_constants import (
     NATIVE_RUNTIME_STATE_DIRECTORY,
     POLICY_SNAPSHOT_AUTHORITY_MAX_BYTES,
     POLICY_SNAPSHOT_AUTHORITY_SCHEMA,
-    POLICY_SNAPSHOT_V3_SCHEMA,
     NativePolicySnapshotError,
 )
 
@@ -78,23 +77,6 @@ def read_native_control_floor(store: GuardStore, verifier_key: bytes) -> Mapping
     if content is None:
         return None
     record = _strict_json_loads_v3(content)
-    if isinstance(record, Mapping) and record.get("schema") == POLICY_SNAPSHOT_V3_SCHEMA:
-        # Older native versions persisted the signed snapshot directly. They
-        # had no command-control floor; authenticate that legacy form before
-        # the first bound publisher can start the resident's migration path.
-        from .native_policy_snapshot_contract import _snapshot_integrity_mac_v3, _validate_snapshot_v3
-
-        _validate_snapshot_v3(record)
-        integrity = record.get("integrity")
-        if (
-            "command_extensions" in record
-            or _canonical_json_bytes_v3(record) != content
-            or not isinstance(integrity, Mapping)
-            or not isinstance(integrity.get("mac"), str)
-            or not hmac.compare_digest(cast(str, integrity["mac"]), _snapshot_integrity_mac_v3(record, verifier_key))
-        ):
-            raise NativePolicySnapshotError("native_command_control_recovery_floor_invalid")
-        return None
     if not isinstance(record, Mapping) or record.get("schema") != POLICY_SNAPSHOT_AUTHORITY_SCHEMA:
         raise NativePolicySnapshotError("native_command_control_recovery_floor_invalid")
     fields = {"schema", "generation_floor", "policy_digest", "snapshot", "floor_mac"}
