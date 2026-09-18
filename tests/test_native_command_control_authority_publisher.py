@@ -41,14 +41,11 @@ KEY = derive_native_policy_verifier_key(b"k" * 32)
 CATALOG = BUILT_IN_COMMAND_EXTENSION_REGISTRY.catalog_digest
 
 
-def test_signed_legacy_snapshot_does_not_block_first_control_fence(tmp_path: Path) -> None:
+def test_unbound_policy_snapshot_cannot_supply_command_control_floor(tmp_path: Path) -> None:
     store = _store(tmp_path, MemorySecretStore())
-    legacy = _snapshot(tmp_path)
-    write_private_state(tmp_path, "policy-snapshot-v3.json", _canonical_json_bytes_v3(legacy), 280 * 1024)
-    assert read_native_control_floor(store, b"v" * 32) is None
-    legacy["policy_digest"] = "f" * 64
-    write_private_state(tmp_path, "policy-snapshot-v3.json", _canonical_json_bytes_v3(legacy), 280 * 1024)
-    with pytest.raises(NativePolicySnapshotError):
+    unbound = _snapshot(tmp_path)
+    write_private_state(tmp_path, "policy-snapshot-v3.json", _canonical_json_bytes_v3(unbound), 280 * 1024)
+    with pytest.raises(NativePolicySnapshotError, match="recovery_floor_invalid"):
         read_native_control_floor(store, b"v" * 32)
 
 
