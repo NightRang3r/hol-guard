@@ -294,7 +294,7 @@ def exercise(root: Path) -> dict[str, object]:
             "",
             revision,
             matched=None,
-            minimum="review",
+            minimum="require-reapproval",
             permission_id=instapods_permission,
             tool_payload={"tool_name": "mcp__instapods__delete_pod", "tool_input": {"pod_id": "synthetic-pod"}},
         )
@@ -303,7 +303,7 @@ def exercise(root: Path) -> dict[str, object]:
             "",
             revision,
             matched=None,
-            minimum="review",
+            minimum="require-reapproval",
             permission_id=instapods_permission,
             tool_payload={"tool_name": "mcp__instapods-mcp__exec_command", "tool_input": {"command": "echo synthetic"}},
         )
