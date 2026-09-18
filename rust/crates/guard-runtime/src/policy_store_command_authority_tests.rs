@@ -173,10 +173,10 @@ fn python_signed_authority_vectors_match_native_lease_and_floor_codecs() {
     ))
     .unwrap();
     let floor: CommandControlFloor =
-        serde_json::from_value(fixture["legacy_floor"].clone()).unwrap();
+        serde_json::from_value(fixture["current_floor"].clone()).unwrap();
     assert_eq!(
         floor_link_digest(Some(&floor)).unwrap(),
-        fixture["legacy_floor_link_digest"]
+        fixture["current_floor_link_digest"]
     );
     assert_eq!(
         floor_link_digest(None).unwrap(),
