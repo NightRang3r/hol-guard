@@ -33,6 +33,8 @@ jobs:
           version: "0.9.26"
           enable-cache: true
       - run: uv sync --frozen --extra dev --python 3.12
+      - name: Verify native command program is current
+        run: uv run --no-sync python scripts/build_native_command_program.py --check
       - name: Run wheel-builder contracts
         run: uv run --no-sync pytest ci/native_runtime/test_native_hol_guard_wheel.py --tb=short
       - name: Install pinned Rust toolchain and musl target
@@ -195,6 +197,8 @@ jobs:
           version: "0.9.26"
           enable-cache: true
       - run: uv sync --frozen --extra dev --python 3.12
+      - name: Verify native command program is current
+        run: uv run --no-sync python scripts/build_native_command_program.py --check
       - name: Install pinned Rust toolchain
         run: |
           rustup toolchain install 1.88.0 --profile minimal
@@ -319,6 +323,8 @@ jobs:
           version: "0.9.26"
           enable-cache: true
       - run: uv sync --frozen --extra dev --python 3.12
+      - name: Verify native command program is current
+        run: uv run --no-sync python scripts/build_native_command_program.py --check
       - name: Install pinned Rust toolchain
         shell: pwsh
         run: |

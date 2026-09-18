@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from dataclasses import dataclass, replace
+from pathlib import Path
 from typing import cast
 
 import pytest
@@ -20,6 +22,12 @@ from codex_plugin_scanner.guard.runtime.command_rules import AnyMatcher, Executa
 @pytest.fixture(scope="module")
 def program() -> dict[str, object]:
     return compiler.compile_native_command_program(BUILT_IN_COMMAND_EXTENSION_REGISTRY)
+
+
+def test_checked_in_native_program_matches_current_authoring_semantics(program: dict[str, object]) -> None:
+    artifact = Path(__file__).parents[1] / "contracts/extensions/native-command-program.v1.json"
+    checked_in = json.loads(artifact.read_text(encoding="utf-8"))
+    assert compiler.canonical_program_bytes(checked_in) == compiler.canonical_program_bytes(program)
 
 
 def test_full_catalog_program_is_deterministic_and_covers_every_owned_variant(program: dict[str, object]) -> None:

@@ -31,8 +31,10 @@ from codex_plugin_scanner.guard.native_command_control_authority import (
     validate_control_floor,
 )
 from codex_plugin_scanner.guard.native_command_control_authority_io import (
+    NativeCommandControlMutationRequiredError,
     hold_command_control_authority_lock,
     read_private_state,
+    require_command_control_mutation_lease,
     write_private_state,
 )
 from codex_plugin_scanner.guard.native_policy_snapshot_constants import NativePolicySnapshotError
@@ -181,6 +183,14 @@ def test_private_marker_handles_short_writes_and_rejects_links(tmp_path: Path, m
         path.symlink_to(tmp_path / "absent.json")
         with pytest.raises(OSError):
             read_private_state(tmp_path, AUTHORITY_FILE_NAME, AUTHORITY_MAX_BYTES)
+
+
+def test_mutation_requirement_accepts_exclusive_lease_and_rejects_shared_lease(tmp_path: Path) -> None:
+    with hold_command_control_authority_lock(tmp_path):
+        require_command_control_mutation_lease(tmp_path)
+    with hold_command_control_authority_lock(tmp_path, shared=True):
+        with pytest.raises(NativeCommandControlMutationRequiredError):
+            require_command_control_mutation_lease(tmp_path)
 
 
 @pytest.mark.skipif(os.name == "nt", reason="POSIX retained-inode identity replacement fault")
