@@ -1,0 +1,59 @@
+name: Native extension runtime verification
+
+on:
+  push:
+    branches: [fix/main-native-extension-runtime]
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/native-extension-runtime-ci.yml'
+      - 'rust/**'
+      - 'contracts/extensions/**'
+      - 'src/codex_plugin_scanner/guard/**'
+      - 'scripts/*native*command*'
+      - 'tests/*native*command*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-extension-runtime-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source-verification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out candidate
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          persist-credentials: false
+      - name: Archive tracked candidate source
+        run: |
+          git archive --format=tar.gz --output="$RUNNER_TEMP/candidate-source.tar.gz" HEAD
+          git rev-parse HEAD > "$RUNNER_TEMP/candidate-source.sha"
+      - name: Check out immutable native implementation reference
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          ref: 590ce01334a7724f3f1349b2ab252110a5a268f5
+          path: native-reference
+          persist-credentials: false
+      - name: Archive tracked reference source
+        run: |
+          git -C native-reference archive --format=tar.gz --output="$RUNNER_TEMP/reference-source.tar.gz" HEAD
+          git -C native-reference rev-parse HEAD > "$RUNNER_TEMP/reference-source.sha"
+          cd "$RUNNER_TEMP"
+          sha256sum candidate-source.tar.gz reference-source.tar.gz > source-digests.txt
+      - name: Upload isolated verification sources
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: native-extension-verification-sources
+          path: |
+            ${{ runner.temp }}/candidate-source.tar.gz
+            ${{ runner.temp }}/candidate-source.sha
+            ${{ runner.temp }}/reference-source.tar.gz
+            ${{ runner.temp }}/reference-source.sha
+            ${{ runner.temp }}/source-digests.txt
+          if-no-files-found: error
+          retention-days: 3
