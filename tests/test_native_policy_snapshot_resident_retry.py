@@ -47,6 +47,7 @@ def test_resident_fingerprint_mismatch_enters_bounded_retry_backoff(
         "_publish_snapshot_v3",
         lambda **_kwargs: ({}, 2),
     )
+    monkeypatch.setattr(publisher, "_compiled_command_extensions", lambda: {})
     try:
         publisher._publish_once()
         retry_deadline = publisher._retry_not_before_monotonic
