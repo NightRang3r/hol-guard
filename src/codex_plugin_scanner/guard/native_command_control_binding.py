@@ -275,9 +275,15 @@ def native_command_control_floor_mac(generation: int, policy_digest: str, floor:
     if floor is None:
         return _generation_floor_mac_v3(generation, policy_digest, verifier_key)
     value = validate_control_floor(floor)
-    bound = "guard-native-policy-command-control-floor.v1\0" + _canonical_json_bytes_v3(
-        {"policy_digest": policy_digest, "command_controls": value}
-    ).decode("utf-8")
+    bound_value = {"policy_digest": policy_digest, "command_controls": value}
+    _validate_json_limits_v3(bound_value)
+    bound = "guard-native-policy-command-control-floor.v1\0" + json.dumps(
+        bound_value,
+        ensure_ascii=False,
+        allow_nan=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
     return _generation_floor_mac_v3(generation, bound, verifier_key)
 
 
