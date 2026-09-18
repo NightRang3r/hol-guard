@@ -112,6 +112,14 @@ const COMPONENTS: &[(&str, &[u8])] = &[
         include_bytes!("../../guard-command/src/command_option_unicode.rs"),
     ),
     (
+        "guard-command-command-option-unicode-ranges-a",
+        include_bytes!("../../guard-command/src/command_option_unicode_ranges_a.rs"),
+    ),
+    (
+        "guard-command-command-option-unicode-ranges-b",
+        include_bytes!("../../guard-command/src/command_option_unicode_ranges_b.rs"),
+    ),
+    (
         "guard-command-command-reviewed-literal",
         include_bytes!("../../guard-command/src/command_reviewed_literal.rs"),
     ),
@@ -194,6 +202,10 @@ const COMPONENTS: &[(&str, &[u8])] = &[
     (
         "guard-contracts-native-command-observations",
         include_bytes!("../../guard-contracts/src/native_command_observations.rs"),
+    ),
+    (
+        "guard-contracts-native-hook-receipt",
+        include_bytes!("../../guard-contracts/src/native_hook_receipt.rs"),
     ),
     (
         "guard-runtime-policy-store-command-floor",
@@ -362,6 +374,8 @@ mod tests {
                 "guard-command-command-operand-matchers",
                 "guard-command-command-option-parsing",
                 "guard-command-command-option-unicode",
+                "guard-command-command-option-unicode-ranges-a",
+                "guard-command-command-option-unicode-ranges-b",
                 "guard-command-command-reviewed-literal",
                 "guard-command-command-specialized-matchers",
                 "guard-command-command-structured-matchers-grammar",
@@ -383,6 +397,7 @@ mod tests {
                 "guard-command-pretool-search",
                 "guard-contracts-native-command-controls",
                 "guard-contracts-native-command-observations",
+                "guard-contracts-native-hook-receipt",
                 "guard-runtime-policy-store-command-floor",
                 "native-command-program-artifact",
                 "guard-command-command-ascii-comparison",
