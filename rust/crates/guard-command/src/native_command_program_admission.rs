@@ -11,7 +11,11 @@ fn valid_mcp_server_name(value: &str) -> bool {
 }
 
 fn valid_remote_mcp_url(value: &str) -> bool {
-    if value.len() > 260 || !value.starts_with("https://") || value.contains('@') || value.contains('#') {
+    if value.len() > 260
+        || !value.starts_with("https://")
+        || value.contains('@')
+        || value.contains('#')
+    {
         return false;
     }
     let authority = value["https://".len()..]
@@ -137,7 +141,11 @@ impl NativeCommandProgram {
                                 || !valid_remote_mcp_url(url)
                                 || mcp.mcp_launch.server_names.is_empty()
                                 || mcp.mcp_launch.server_names.len() > 8
-                                || mcp.mcp_launch.server_names.iter().any(|name| !valid_mcp_server_name(name))
+                                || mcp
+                                    .mcp_launch
+                                    .server_names
+                                    .iter()
+                                    .any(|name| !valid_mcp_server_name(name))
                         }
                         _ => true,
                     };
@@ -153,7 +161,10 @@ impl NativeCommandProgram {
                                         || c == b'_'
                                         || c == b'-'
                                 })
-                                || !matches!(tool.state.as_str(), "allow" | "inherit" | "review" | "block")
+                                || !matches!(
+                                    tool.state.as_str(),
+                                    "allow" | "inherit" | "review" | "block"
+                                )
                         })
                 })
                 || extension
@@ -260,13 +271,15 @@ impl NativeCommandProgram {
                 })
                 .transpose()?;
             for executable in rule.candidate_executables {
-                if executable != lowercase_for_ascii_comparison(basename(&executable)) {
+                let executable = lowercase_for_ascii_comparison(basename(&executable));
+                if executable.is_empty() {
                     return Err("native_command_rule_candidate_invalid");
                 }
                 executable_index.entry(executable).or_default().push(index);
             }
             for keyword in rule.candidate_keywords {
-                if keyword != lowercase_for_ascii_comparison(&keyword) {
+                let keyword = lowercase_for_ascii_comparison(&keyword);
+                if keyword.is_empty() {
                     return Err("native_command_rule_candidate_invalid");
                 }
                 keyword_index.entry(keyword).or_default().push(index);
