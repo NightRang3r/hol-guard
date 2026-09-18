@@ -168,6 +168,22 @@ fn budget_and_parser_failures_cannot_become_empty_success() {
 }
 
 #[test]
+fn github_api_query_suffix_preserves_merge_authorization() {
+    let observed = compatibility_observations(
+        &model("gh api repos/o/r/pulls/17/merge?x=y --method PUT"),
+        None,
+    )
+    .unwrap();
+    assert_eq!(observed.rule_matches.len(), 1);
+    assert_eq!(observed.rule_matches[0].rule_id, "command.github.merge");
+    assert_eq!(observed.permission_matches.len(), 1);
+    assert_eq!(
+        observed.permission_matches[0].permission_id,
+        "command.github.permission.merge-remote"
+    );
+}
+
+#[test]
 fn graphql_remains_owned_unsupported_instead_of_permissionless_allow() {
     let observed = compatibility_observations(
         &model("gh api graphql -f 'query=query{viewer{login}}'"),
