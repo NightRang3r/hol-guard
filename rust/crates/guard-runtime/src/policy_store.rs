@@ -221,6 +221,13 @@ impl PolicySnapshotStore {
             Arc::clone(&approval_v4_authority_observed),
             Arc::downgrade(&authority_changed),
         );
+        let (admitted_snapshot, admission_failed) = match loaded.snapshot.as_ref() {
+            Some(snapshot) => match AdmittedPolicySnapshot::new(snapshot.clone()) {
+                Ok(snapshot) => (Some(Arc::new(snapshot)), false),
+                Err(_) => (None, true),
+            },
+            None => (None, false),
+        };
         Ok(Self {
             authority_path,
             expected_runtime_identity: runtime_identity.to_owned(),
@@ -237,15 +244,11 @@ impl PolicySnapshotStore {
             authority_observed,
             authority_changed,
             state: Mutex::new(PolicyState {
-                snapshot: loaded
-                    .snapshot
-                    .map(AdmittedPolicySnapshot::new)
-                    .transpose()?
-                    .map(Arc::new),
+                snapshot: admitted_snapshot,
                 canonical_bytes: loaded.canonical_bytes,
                 generation_floor: loaded.generation_floor,
                 policy_digest: loaded.policy_digest,
-                invalid_on_startup: loaded.invalid_on_startup,
+                invalid_on_startup: loaded.invalid_on_startup || admission_failed,
                 command_control_floor: loaded.command_control_floor,
             }),
         })
