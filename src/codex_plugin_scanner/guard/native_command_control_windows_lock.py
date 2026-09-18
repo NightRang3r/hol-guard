@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ctypes
+import functools
 from typing import Any
 
 _LOCKFILE_FAIL_IMMEDIATELY = 0x00000001
@@ -20,6 +21,7 @@ class _Overlapped(ctypes.Structure):
     ]
 
 
+@functools.cache
 def _kernel32() -> Any:
     kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
     kernel32.LockFileEx.argtypes = [
