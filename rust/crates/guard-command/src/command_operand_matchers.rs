@@ -7,6 +7,7 @@ use serde::Deserialize;
 use serde_json::Value;
 
 use crate::command_option_parsing::{python_is_alphabetic, python_is_whitespace};
+use crate::command_database_matchers::check_command_bounds;
 use crate::command_structured_matchers::{
     check_deadline, normalize_lower_set, normalize_option_set, operands_without_options,
     present_flags, segment_matches_executable,
@@ -171,6 +172,11 @@ impl OperandMatcher {
         command: &CanonicalCommandV1,
         deadline: Option<Instant>,
     ) -> Result<Vec<usize>, &'static str> {
+        check_deadline(deadline)?;
+        check_command_bounds(command)?;
+        if command.confidence != "exact" {
+            return Err("operand_command_uncertain");
+        }
         let common = match self {
             Self::OperandGatedFlags(common) | Self::TrailingOperandHostTarget(common) => common,
             Self::TrailingOperandPrefix { common, .. }
