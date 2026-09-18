@@ -11,6 +11,7 @@ use std::time::Instant;
 use serde::Deserialize;
 use serde_json::Value;
 
+use crate::command_database_matchers::check_command_bounds;
 use crate::command_option_parsing::python_is_whitespace;
 use crate::{CanonicalCommandV1, CommandSegmentV1};
 
@@ -189,6 +190,11 @@ impl StructuredMatcher {
         command: &CanonicalCommandV1,
         deadline: Option<Instant>,
     ) -> MatchResult {
+        check_deadline(deadline)?;
+        check_command_bounds(command)?;
+        if command.confidence != "exact" {
+            return Err("structured_command_uncertain");
+        }
         let mut matches = Vec::new();
         for (index, segment) in command.segments.iter().enumerate() {
             check_deadline(deadline)?;
