@@ -97,8 +97,14 @@ pub struct ProgramMcp {
 #[serde(deny_unknown_fields)]
 pub struct ProgramMcpLaunch {
     pub kind: String,
-    pub command: String,
-    pub package: String,
+    #[serde(default)]
+    pub command: Option<String>,
+    #[serde(default)]
+    pub package: Option<String>,
+    #[serde(default)]
+    pub url: Option<String>,
+    #[serde(rename = "serverNames", default)]
+    pub server_names: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
