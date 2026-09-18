@@ -50,7 +50,7 @@ def test_shared_python_rust_authority_vectors() -> None:
         expected = vector["canonical_signed_json"].encode()
         assert encode_authority(vector["record"], verifier_key) == expected
         assert decode_authority(expected, verifier_key)["schema"] == AUTHORITY_SCHEMA
-    assert floor_link_digest(fixture["legacy_floor"]) == fixture["legacy_floor_link_digest"]
+    assert floor_link_digest(fixture["current_floor"]) == fixture["current_floor_link_digest"]
     assert floor_link_digest(None) == fixture["null_floor_link_digest"]
 
 
